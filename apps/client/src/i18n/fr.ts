@@ -63,6 +63,8 @@ export const fr: Messages = {
   selectBelow: 'Choisissez un pion ci-dessous',
   complete: 'Partie terminée',
   noRoll: 'Aucun lancer',
+  rolling: 'Le dé roule...',
+  sixStreak: "{count} six d'affilée",
   rolled: '{player} a fait {value}.',
   quickRules: 'Règles rapides',
   rules:

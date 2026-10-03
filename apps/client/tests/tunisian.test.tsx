@@ -290,20 +290,38 @@ describe('localization and sound', () => {
   });
 
   it('unlocks audio on user request, generates notes, and respects mute', async () => {
-    const oscillator = {
-      frequency: { value: 0 },
+    const param = () => ({
+      value: 0,
+      setValueAtTime: vi.fn(),
+      linearRampToValueAtTime: vi.fn(),
+      exponentialRampToValueAtTime: vi.fn(),
+    });
+    const oscillators: { type: string; onended: (() => void) | null }[] = [];
+    const createOscillator = vi.fn(() => {
+      const oscillator = {
+        type: 'sine',
+        frequency: param(),
+        connect: vi.fn(),
+        disconnect: vi.fn(),
+        start: vi.fn(),
+        stop: vi.fn(),
+        onended: null,
+      };
+      oscillators.push(oscillator);
+      return oscillator;
+    });
+    const filter = {
+      type: 'allpass',
+      frequency: param(),
+      Q: param(),
       connect: vi.fn(),
       disconnect: vi.fn(),
-      start: vi.fn(),
-      stop: vi.fn(),
-      onended: null,
     };
-    const gain = {
-      gain: { setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() },
+    const createGain = () => ({
+      gain: param(),
       connect: vi.fn(),
       disconnect: vi.fn(),
-    };
-    const createOscillator = vi.fn(() => oscillator);
+    });
     const resume = vi.fn(async () => {});
     vi.stubGlobal(
       'AudioContext',
@@ -312,7 +330,8 @@ describe('localization and sound', () => {
         destination = {};
         resume = resume;
         createOscillator = createOscillator;
-        createGain = () => gain;
+        createGain = createGain;
+        createBiquadFilter = () => filter;
       },
     );
     await toggleSound();
@@ -320,9 +339,19 @@ describe('localization and sound', () => {
     expect(usePreferences.getState().soundEnabled).toBe(true);
     playEventSound({ type: 'GAME_WON', playerId: 'red' });
     expect(createOscillator).toHaveBeenCalledTimes(4);
+    playEventSound({ type: 'DICE_ROLLED', playerId: 'red', value: 6 });
+    expect(createOscillator).toHaveBeenCalledTimes(7);
+    expect(oscillators.slice(4).map((oscillator) => oscillator.type)).toEqual([
+      'sine',
+      'sawtooth',
+      'square',
+    ]);
+    expect(filter.type).toBe('lowpass');
+    oscillators[5].onended?.();
+    expect(filter.disconnect).toHaveBeenCalledOnce();
     await toggleSound();
     playEventSound({ type: 'DICE_ROLLED', playerId: 'red', value: 6 });
-    expect(createOscillator).toHaveBeenCalledTimes(4);
+    expect(createOscillator).toHaveBeenCalledTimes(7);
     expect(usePreferences.getState().soundEnabled).toBe(false);
     resume.mockRejectedValueOnce(new Error('Audio blocked'));
     await toggleSound();

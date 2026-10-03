@@ -23,6 +23,7 @@ export interface LocalGameStore {
   displayedPlayerId: PlayerColor | null;
   lastDie: number | null;
   lastRollPlayerId: PlayerColor | null;
+  rollCount: number;
   message: string;
   error: string | null;
   start(options: CreateGameOptions): void;
@@ -48,6 +49,7 @@ const initial = {
   displayedPlayerId: null,
   lastDie: null,
   lastRollPlayerId: null,
+  rollCount: 0,
   message: '',
   error: null,
 } satisfies Omit<
@@ -170,6 +172,7 @@ export function createLocalGameStore(
               eventQueue: rest,
               lastDie: event.value,
               lastRollPlayerId: event.playerId,
+              rollCount: get().rollCount + 1,
               message: `${colorLabel(event.playerId)} rolled ${event.value}.`,
               lastMessageEvent: event,
             });

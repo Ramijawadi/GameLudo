@@ -60,6 +60,8 @@ export const en = {
   selectBelow: 'Select a pawn below',
   complete: 'Game complete',
   noRoll: 'No dice rolled yet',
+  rolling: 'Rolling the die...',
+  sixStreak: '{count} six in a row',
   rolled: '{player} rolled {value}.',
   quickRules: 'Quick rules',
   rules:

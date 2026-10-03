@@ -23,7 +23,7 @@ to choose on a small screen. Pass the phone when the turn changes.
 ## Tunisian mode, language, and feedback
 
 - Ten emoji-marked special tiles use the [engine rules](../../packages/engine/README.md).
-  Expand Quick rules for a translated tile legend.
+- Expand Quick rules (the `?` button in the header) for a translated tile legend.
 - A double six opens an event-card modal. Dismiss it to choose a highlighted
   eligible target (on the board or the large numbered circles), confirm, and
   then play the pending six. Cards without targets explain why they have no effect.
@@ -32,9 +32,16 @@ to choose on a small screen. Pass the phone when the turn changes.
 - Six cosmetic reactions show a player-attributed bubble for exactly two seconds.
   A new reaction replaces the old one and restarts its timer.
 - Sound is off by default. Enable it via the sound button (a user gesture unlocks
-  Web Audio). Dice, movement, capture, cards and victory use quiet synthesized
-  tones, without external assets. Audio failures are visibly reported.
-- Numbered selection circles are at least 56px tall, with explicit selected and
+  Web Audio). Each roll plays a synthesized "vroom vroom" car-engine rev while
+  the die tumbles. Movement, capture, cards and victory use quiet tones, without
+  external assets. Audio failures are visibly reported.
+- The die is a 3D CSS cube on a felt tray. It hops and spins during the roll,
+  lands on the rolled face, flashes gold on a six and shows a 🔥 streak badge.
+- The game screen fills exactly one phone viewport (`100dvh`), with no page
+  scrolling. The board is sized from the space left over by the header, turn
+  banner, dice stage, player chips, pawn picker and reactions. Its symbols
+  scale with container units. Reduced motion skips the roll animation.
+- Numbered selection circles are 40–46px, with explicit selected and
   playable states and per-player colors.
 
 ## Architecture

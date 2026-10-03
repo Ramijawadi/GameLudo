@@ -30,39 +30,47 @@ export function App() {
       {!game ? (
         <SetupPage />
       ) : (
-        <main className="game-page">
+        <main className={`game-page ${game.mode}`}>
           <header className="game-header">
             <h1>
               Ludo <span>{t('passPlay')}</span>
             </h1>
+            <Preferences />
+            <details className="rules">
+              <summary aria-label={t('quickRules')} title={t('quickRules')}>
+                <span aria-hidden="true">?</span>
+              </summary>
+              <div className="rules-popover">
+                <p>{t('rules')}</p>
+                {game.mode === 'tunisian' && (
+                  <ul className="tile-legend">
+                    {tileRegistry.all().map((tile) => (
+                      <li key={tile.id}>
+                        <strong>{t(`tile_${tile.id}`)}</strong>{' '}
+                        {t(`effect_${tile.id}`)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </details>
             <button
               type="button"
-              className="text-button"
+              className="icon-button"
+              aria-label={t('newGame')}
+              title={t('newGame')}
               onClick={() => setConfirmReset(true)}
             >
-              {t('newGame')}
+              <span aria-hidden="true">↺</span>
             </button>
           </header>
-          <Preferences />
           <TurnBanner />
-          <Board />
+          <div className="board-area">
+            <Board />
+          </div>
           <Dice />
           <PlayerPanel />
           <ReactionBar />
-          <details className="rules">
-            <summary>{t('quickRules')}</summary>
-            <p>{t('rules')}</p>
-            {game.mode === 'tunisian' && (
-              <ul className="tile-legend">
-                {tileRegistry.all().map((tile) => (
-                  <li key={tile.id}>
-                    <strong>{t(`tile_${tile.id}`)}</strong>{' '}
-                    {t(`effect_${tile.id}`)}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </details>
         </main>
       )}
       <EventCardModal />

@@ -62,6 +62,8 @@ export const tn: Messages = {
   selectBelow: 'E5tar pion men louta',
   complete: 'Wfet el partie',
   noRoll: 'Mazelt ma rmit',
+  rolling: 'El dé ydour...',
+  sixStreak: '{count} sita wra b3adhhom',
   rolled: '{player} jeb {value}.',
   quickRules: 'Kifech nel3bou',
   rules:

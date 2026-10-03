@@ -41,41 +41,43 @@ export function PlayerPanel() {
                   (pawn) => positions[pawn.id] === FINISHED_POSITION,
                 ).length
               }
-              /4 {t('home')}
+              /4 <span className="sr-only">{t('home')}</span>
             </span>
           </li>
         ))}
       </ul>
       {game.phase !== 'finished' && (
         <div className={`pawn-picker ${active.id}`}>
-          <span className="picker-label">
+          <span className="picker-label sr-only">
             {t(targeting ? 'targetPicker' : 'picker')}
           </span>
-          {selectablePlayers.map((player) => (
-            <div
-              key={player.id}
-              className="pawn-choices"
-              role="group"
-              aria-label={t('selection', { player: playerName(player.id) })}
-            >
-              {player.pawns.map((pawn, index) => (
-                <button
-                  key={pawn.id}
-                  type="button"
-                  aria-label={t('selectPawn', {
-                    player: playerName(player.id),
-                    number: index + 1,
-                  })}
-                  aria-pressed={selected === pawn.id}
-                  disabled={busy || !!card || !playable.includes(pawn.id)}
-                  className={`pawn-choice ${player.id} ${playable.includes(pawn.id) && !busy && !card ? 'playable' : ''}`}
-                  onClick={() => select(pawn.id)}
-                >
-                  <span className="pawn-number">{index + 1}</span>
-                </button>
-              ))}
-            </div>
-          ))}
+          <div className="pawn-groups">
+            {selectablePlayers.map((player) => (
+              <div
+                key={player.id}
+                className="pawn-choices"
+                role="group"
+                aria-label={t('selection', { player: playerName(player.id) })}
+              >
+                {player.pawns.map((pawn, index) => (
+                  <button
+                    key={pawn.id}
+                    type="button"
+                    aria-label={t('selectPawn', {
+                      player: playerName(player.id),
+                      number: index + 1,
+                    })}
+                    aria-pressed={selected === pawn.id}
+                    disabled={busy || !!card || !playable.includes(pawn.id)}
+                    className={`pawn-choice ${player.id} ${playable.includes(pawn.id) && !busy && !card ? 'playable' : ''}`}
+                    onClick={() => select(pawn.id)}
+                  >
+                    <span className="pawn-number">{index + 1}</span>
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
           <button
             className="primary move-button"
             type="button"

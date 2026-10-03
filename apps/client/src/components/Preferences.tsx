@@ -31,15 +31,18 @@ export function Preferences() {
       </label>
       <button
         type="button"
+        className="sound-toggle"
         aria-pressed={sound}
+        title={t(sound ? 'soundOn' : 'soundOff')}
         onClick={() => {
           void toggleSound();
         }}
       >
-        {t(sound ? 'soundOn' : 'soundOff')}
+        <span aria-hidden="true">{sound ? '🔊' : '🔇'}</span>
+        <span className="pref-label">{t(sound ? 'soundOn' : 'soundOff')}</span>
       </button>
       {error && (
-        <span role="alert">
+        <span className="pref-error" role="alert">
           {t(error)}
           {detail ? ` (${detail})` : ''}
         </span>
