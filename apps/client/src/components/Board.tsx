@@ -63,6 +63,7 @@ export function Board() {
   const selected = useGameStore((state) => state.selectedPawnId);
   const busy = useGameStore((state) => state.eventQueue.length > 0);
   const select = useGameStore((state) => state.selectPawn);
+  const move = useGameStore((state) => state.movePawn);
   const { t } = useTranslation();
   if (!game) return null;
 
@@ -149,7 +150,7 @@ export function Board() {
               }
               selected={selected === pawn.id}
               finished={pawn.position === FINISHED_POSITION}
-              onSelect={select}
+              onSelect={game.phase === 'CHOOSE_TARGET' ? select : move}
             />
           );
         })}

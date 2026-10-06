@@ -12,7 +12,7 @@ export function PlayerPanel() {
   const selected = useGameStore((state) => state.selectedPawnId);
   const busy = useGameStore((state) => state.eventQueue.length > 0);
   const select = useGameStore((state) => state.selectPawn);
-  const move = useGameStore((state) => state.moveSelected);
+  const move = useGameStore((state) => state.movePawn);
   const chooseTarget = useGameStore((state) => state.chooseSelectedTarget);
   const { t, playerName } = useTranslation();
   if (!game) return null;
@@ -63,14 +63,16 @@ export function PlayerPanel() {
                   <button
                     key={pawn.id}
                     type="button"
-                    aria-label={t('selectPawn', {
+                    aria-label={t(targeting ? 'selectPawn' : 'moveNamedPawn', {
                       player: playerName(player.id),
                       number: index + 1,
                     })}
-                    aria-pressed={selected === pawn.id}
+                    aria-pressed={targeting ? selected === pawn.id : undefined}
                     disabled={busy || !!card || !playable.includes(pawn.id)}
                     className={`pawn-choice ${player.id} ${playable.includes(pawn.id) && !busy && !card ? 'playable' : ''}`}
-                    onClick={() => select(pawn.id)}
+                    onClick={() =>
+                      targeting ? select(pawn.id) : move(pawn.id)
+                    }
                   >
                     <span className="pawn-number">{index + 1}</span>
                   </button>
@@ -78,22 +80,16 @@ export function PlayerPanel() {
               </div>
             ))}
           </div>
-          <button
-            className="primary move-button"
-            type="button"
-            disabled={busy || !!card || !selected}
-            onClick={targeting ? chooseTarget : move}
-          >
-            {targeting
-              ? t('confirmTarget')
-              : selected
-                ? t('movePawn', {
-                    number:
-                      active.pawns.findIndex((pawn) => pawn.id === selected) +
-                      1,
-                  })
-                : t('selectMove')}
-          </button>
+          {targeting && (
+            <button
+              className="primary move-button"
+              type="button"
+              disabled={busy || !!card || !selected}
+              onClick={chooseTarget}
+            >
+              {t('confirmTarget')}
+            </button>
+          )}
         </div>
       )}
     </>

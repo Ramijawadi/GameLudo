@@ -50,7 +50,8 @@ export const fr: Messages = {
   finished: ', arrivé',
   progress: 'Progression des joueurs',
   home: 'arrivés',
-  picker: 'Touchez un pion surligné pour le choisir',
+  picker: 'Touchez le numéro d’un pion surligné pour le déplacer',
+  moveNamedPawn: 'Déplacer le pion {player} {number}',
   targetPicker:
     'Choisissez une cible. Les adversaires sur les cases sûres et dans les couloirs sont protégés.',
   selectPawn: 'Choisir le pion {player} {number}',

@@ -23,8 +23,9 @@ immediately on contact, without waiting for a click; releasing does not roll
 again. Mouse clicks and keyboard activation also work. Other players' dice stay
 locked, and each die keeps that player's latest result. All roll controls lock
 during playback and while a move or card target is pending. Roll,
-tap a highlighted pawn on the board or its larger numbered selection button,
-then confirm the move. This second selection surface makes stacked pawns easy
+tap a highlighted pawn on the board or its larger numbered button to move it
+immediately, with no extra confirmation. Card targets still require confirmation.
+This second interaction surface makes stacked pawns easy
 to choose on a small screen. Pass the phone when the turn changes.
 
 ## Tunisian mode, language, and feedback

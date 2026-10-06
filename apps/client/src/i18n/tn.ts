@@ -51,6 +51,7 @@ export const tn: Messages = {
   progress: 'Win wsolna',
   home: 'raww7ou',
   picker: 'Enzel 3al pion el mdhawwi',
+  moveNamedPawn: '7arrek pion {player} {number}',
   targetPicker: 'E5tar cible. Cases sûres w couloirs ma temeshomch.',
   selectPawn: 'E5tar pion {player} {number}',
   selection: 'Pions {player}',

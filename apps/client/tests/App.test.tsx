@@ -1,7 +1,14 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createGame, rollDie } from '@ludo/engine';
+import {
+  applyAction,
+  createGame,
+  getLegalMoves,
+  getLegalTargets,
+  rollDie,
+  type GameState,
+} from '@ludo/engine';
 import { App } from '../src/App';
 import { localGameStore } from '../src/store';
 
@@ -66,7 +73,7 @@ describe('pass & play UI', () => {
     ).toBe(false);
   });
 
-  it('rolls, highlights/selects a playable board pawn, confirms its move and unlocks the extra roll', async () => {
+  it('moves a playable board pawn with one tap and unlocks the extra roll', async () => {
     vi.useFakeTimers();
     localGameStore
       .getState()
@@ -87,8 +94,12 @@ describe('pass & play UI', () => {
     const pawn = screen.getByRole('button', { name: 'Red pawn 1' });
     expect(pawn.classList.contains('playable')).toBe(true);
     fireEvent.click(pawn);
-    expect(pawn.getAttribute('aria-pressed')).toBe('true');
-    fireEvent.click(screen.getByRole('button', { name: 'Move pawn 1' }));
+    fireEvent.click(pawn);
+    expect(localGameStore.getState().game?.players[0].pawns[0].position).toBe(
+      0,
+    );
+    expect(localGameStore.getState().error).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Move pawn 1' })).toBeNull();
     expect(localGameStore.getState().visualPositions['red-0']).toBe(-1);
     await act(() => vi.runAllTimersAsync());
     expect(localGameStore.getState().visualPositions['red-0']).toBe(0);
@@ -121,8 +132,7 @@ describe('pass & play UI', () => {
       die.querySelector(`.die-cube.show-${expected}.landing`),
     ).not.toBeNull();
     expect(die.hasAttribute('disabled')).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Select Red pawn 1' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Move pawn 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Move Red pawn 1' }));
     await act(() => vi.runAllTimersAsync());
     expect(die.hasAttribute('disabled')).toBe(false);
     fireEvent.click(die);
@@ -206,10 +216,32 @@ describe('pass & play UI', () => {
     expect(localGameStore.getState().diceValues).toEqual({});
   });
 
-  it('offers separate large selection buttons for overlapping pawns', async () => {
-    const state = createGame({ seed: 1, players: ['red', 'yellow'] });
+  it('moves the chosen numbered pawn directly even when board pawns overlap', async () => {
+    const initial = createGame({ seed: 1, players: ['red', 'yellow'] });
+    let state: GameState = {
+      ...initial,
+      phase: 'awaiting_move',
+      die: 1,
+      players: initial.players.map((player) => ({
+        ...player,
+        pawns: player.pawns.map((pawn) => ({
+          ...pawn,
+          position: player.id === 'red' ? 0 : -1,
+        })),
+      })),
+    };
     localGameStore.setState({
-      game: { ...state, phase: 'awaiting_move', die: 1 },
+      controller: {
+        getState: () => state,
+        getLegalMoves: () => getLegalMoves(state),
+        getLegalTargets: () => getLegalTargets(state),
+        dispatch: (action) => {
+          const result = applyAction(state, action);
+          state = result.state;
+          return result;
+        },
+      },
+      game: state,
       displayedPlayerId: 'red',
       legalMoves: ['red-0', 'red-1'],
       visualPositions: Object.fromEntries(
@@ -220,13 +252,22 @@ describe('pass & play UI', () => {
     });
     const user = userEvent.setup();
     render(<App />);
-    await user.click(screen.getByRole('button', { name: 'Select Red pawn 2' }));
-    expect(
-      screen
-        .getByRole('button', { name: 'Move pawn 2' })
-        .hasAttribute('disabled'),
-    ).toBe(false);
-    expect(localGameStore.getState().selectedPawnId).toBe('red-1');
+    await user.pointer({
+      keys: '[TouchA]',
+      target: screen.getByRole('button', { name: 'Move Red pawn 2' }),
+    });
+    expect(localGameStore.getState().game?.players[0].pawns[1].position).toBe(
+      1,
+    );
+    expect(localGameStore.getState().game?.players[0].pawns[0].position).toBe(
+      0,
+    );
+    act(() => {
+      while (localGameStore.getState().eventQueue.length > 0) {
+        localGameStore.getState().advanceAnimation();
+      }
+    });
+    expect(localGameStore.getState().visualPositions['red-1']).toBe(1);
   });
 
   it('cancels or confirms restarting without losing the game accidentally', async () => {

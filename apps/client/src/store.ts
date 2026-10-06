@@ -31,6 +31,7 @@ export interface LocalGameStore {
   reset(): void;
   selectPawn(pawnId: string): void;
   roll(): void;
+  movePawn(pawnId: string): void;
   moveSelected(): void;
   chooseSelectedTarget(): void;
   dismissCard(): void;
@@ -60,6 +61,7 @@ const initial = {
   | 'reset'
   | 'selectPawn'
   | 'roll'
+  | 'movePawn'
   | 'moveSelected'
   | 'advanceAnimation'
   | 'chooseSelectedTarget'
@@ -149,6 +151,9 @@ export function createLocalGameStore(
           set({ error: 'Select a highlighted pawn first.' });
           return;
         }
+        dispatch({ type: 'MOVE_PAWN', pawnId });
+      },
+      movePawn(pawnId) {
         dispatch({ type: 'MOVE_PAWN', pawnId });
       },
       chooseSelectedTarget() {

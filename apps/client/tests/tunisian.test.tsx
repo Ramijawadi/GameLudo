@@ -109,7 +109,7 @@ describe('Tunisian client', () => {
     });
     expect(
       screen
-        .getByRole('button', { name: 'Select Red pawn 1' })
+        .getByRole('button', { name: 'Move Red pawn 1' })
         .hasAttribute('disabled'),
     ).toBe(false);
   });
