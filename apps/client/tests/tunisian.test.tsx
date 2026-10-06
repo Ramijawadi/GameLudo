@@ -96,7 +96,7 @@ describe('Tunisian client', () => {
       }),
     );
     await act(() => vi.runAllTimersAsync());
-    const pawn = screen.getByRole('button', { name: 'Select Red pawn 1' });
+    const pawn = screen.getByRole('button', { name: 'Red pawn 1' });
     expect(pawn.hasAttribute('disabled')).toBe(false);
     fireEvent.click(pawn);
     fireEvent.click(screen.getByRole('button', { name: 'Confirm target' }));
@@ -109,7 +109,7 @@ describe('Tunisian client', () => {
     });
     expect(
       screen
-        .getByRole('button', { name: 'Move Red pawn 1' })
+        .getByRole('button', { name: 'Red pawn 1' })
         .hasAttribute('disabled'),
     ).toBe(false);
   });

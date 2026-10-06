@@ -74,7 +74,12 @@ export function SetupPage() {
           type="button"
           onClick={() => {
             const seed = crypto.getRandomValues(new Uint32Array(1))[0];
-            start({ seed, players, mode: tunisian ? 'tunisian' : 'standard' });
+            start({
+              seed,
+              players,
+              mode: tunisian ? 'tunisian' : 'standard',
+              bonuses: true,
+            });
           }}
         >
           {t('start')}

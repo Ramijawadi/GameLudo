@@ -21,6 +21,7 @@ export function createGame({
   seed,
   players = PLAYER_COLORS,
   mode = 'standard',
+  bonuses = false,
 }: CreateGameOptions): GameState {
   validateSeed(seed);
   if (mode !== 'standard' && mode !== 'tunisian')
@@ -37,12 +38,28 @@ export function createGame({
     players: players.map((id) => ({
       id,
       skipNextTurn: false,
+      bonuses: { extra_roll: 0, return_home: 0, crazy: 0 },
       pawns: Array.from({ length: 4 }, (_, index) => ({
         id: `${id}-${index}`,
         position: YARD_POSITION,
       })),
     })),
     currentPlayerIndex: 0,
+    bonusesEnabled: bonuses,
+    bonusPickups: bonuses
+      ? [
+          { index: 12, bonusId: 'extra_roll' },
+          { index: 24, bonusId: 'return_home' },
+          { index: 38, bonusId: 'extra_roll' },
+          { index: 50, bonusId: 'return_home' },
+          { index: 4, bonusId: 'crazy' },
+          { index: 30, bonusId: 'crazy' },
+        ]
+      : [],
+    extraRolls: 0,
+    bonusArmed: false,
+    bonusRollPending: false,
+    crazyMoves: 0,
     phase: 'awaiting_roll',
     mode,
     pendingCard: null,
@@ -61,7 +78,7 @@ export function getLegalTargets(state: GameState): readonly string[] {
 
 export function getLegalMoves(state: GameState): readonly string[] {
   if (state.phase !== 'awaiting_move' || state.die === null) return [];
-  const die = state.die;
+  const die = state.crazyMoves > 0 ? 6 : state.die;
   return state.players[state.currentPlayerIndex].pawns
     .filter((pawn) =>
       pawn.position === YARD_POSITION
@@ -92,6 +109,10 @@ function endTurn(
       phase: 'awaiting_roll',
       die: null,
       consecutiveSixes: 0,
+      extraRolls: 0,
+      bonusArmed: false,
+      bonusRollPending: false,
+      crazyMoves: 0,
     },
     events,
   };
@@ -172,8 +193,11 @@ function applyEffect(
 }
 
 function continueRoll(state: GameState, events: GameEvent[]): Transition {
-  if (getLegalMoves(state).length === 0)
+  if (getLegalMoves(state).length === 0) {
+    if (state.crazyMoves > 0)
+      return continueRoll({ ...state, crazyMoves: 0 }, events);
     return afterMoveOrNoMoves(state, 'no_moves', events);
+  }
   return { state, events };
 }
 
@@ -221,8 +245,23 @@ function afterMoveOrNoMoves(
   events: GameEvent[],
 ): Transition {
   if (state.die === 6) {
-    return { state: { ...state, phase: 'awaiting_roll', die: null }, events };
+    return {
+      state: { ...state, phase: 'awaiting_roll', die: null, bonusArmed: false },
+      events,
+    };
   }
+  if (state.extraRolls > 0)
+    return {
+      state: {
+        ...state,
+        phase: 'awaiting_roll',
+        die: null,
+        extraRolls: state.extraRolls - 1,
+        bonusArmed: false,
+        bonusRollPending: true,
+      },
+      events,
+    };
   return endTurn(state, reason, events);
 }
 
@@ -230,6 +269,65 @@ export function applyAction(state: GameState, action: Action): Transition {
   if (state.phase === 'finished')
     throw new Error('The game has already finished.');
   const player = state.players[state.currentPlayerIndex];
+  if (action.type === 'USE_BONUS') {
+    if (
+      !state.bonusesEnabled ||
+      state.phase !== 'awaiting_move' ||
+      state.die === null
+    )
+      throw new Error('Use bonuses after rolling and before moving.');
+    if (state.crazyMoves > 0)
+      throw new Error('Finish the two crazy moves before using another bonus.');
+    if (player.bonuses[action.bonusId] < 1)
+      throw new Error('You do not have that bonus.');
+    if (action.bonusId === 'extra_roll' && state.bonusArmed)
+      throw new Error('An extra roll is already reserved for this move.');
+    if (action.bonusId === 'return_home') {
+      const pawn = player.pawns.find((pawn) => pawn.id === action.pawnId);
+      if (!pawn || pawn.position < 0 || pawn.position >= FINISHED_POSITION)
+        throw new Error(
+          'Choose one of your own unfinished pawns outside the yard.',
+        );
+    }
+    if (
+      action.bonusId === 'crazy' &&
+      getLegalMoves({ ...state, crazyMoves: 2 }).length === 0
+    )
+      throw new Error('No pawn can move six spaces.');
+    const events: GameEvent[] = [
+      { type: 'BONUS_USED', playerId: player.id, bonusId: action.bonusId },
+    ];
+    let used: GameState = {
+      ...state,
+      players: state.players.map((candidate) =>
+        candidate.id === player.id
+          ? {
+              ...candidate,
+              bonuses: {
+                ...candidate.bonuses,
+                [action.bonusId]: candidate.bonuses[action.bonusId] - 1,
+              },
+            }
+          : candidate,
+      ),
+    };
+    if (action.bonusId === 'extra_roll')
+      return {
+        state: { ...used, extraRolls: used.extraRolls + 1, bonusArmed: true },
+        events,
+      };
+    if (action.bonusId === 'crazy')
+      return { state: { ...used, crazyMoves: 2 }, events };
+    used = relocate(
+      used,
+      player.id,
+      action.pawnId,
+      YARD_POSITION,
+      false,
+      events,
+    );
+    return continueRoll(used, events);
+  }
   if (action.type === 'CHOOSE_TARGET') {
     if (state.phase !== 'CHOOSE_TARGET' || !state.pendingCard)
       throw new Error('No card is awaiting a target.');
@@ -271,7 +369,8 @@ export function applyAction(state: GameState, action: Action): Transition {
     if (
       state.mode === 'tunisian' &&
       player.skipNextTurn &&
-      state.consecutiveSixes === 0
+      state.consecutiveSixes === 0 &&
+      !state.bonusRollPending
     ) {
       return endTurn(setSkip(state, player.id, false), 'skipped', []);
     }
@@ -285,6 +384,7 @@ export function applyAction(state: GameState, action: Action): Transition {
       die: roll.value,
       phase: 'awaiting_move',
       consecutiveSixes: roll.value === 6 ? state.consecutiveSixes + 1 : 0,
+      bonusRollPending: false,
     };
     if (rolled.consecutiveSixes === 3)
       return endTurn(rolled, 'three_sixes', events);
@@ -300,10 +400,40 @@ export function applyAction(state: GameState, action: Action): Transition {
   const pawn = player.pawns.find((candidate) => candidate.id === action.pawnId);
   if (!pawn) throw new Error(`Unknown pawn: ${action.pawnId}.`);
   const position =
-    pawn.position === YARD_POSITION ? 0 : pawn.position + state.die;
+    pawn.position === YARD_POSITION
+      ? 0
+      : pawn.position + (state.crazyMoves > 0 ? 6 : state.die);
   const events: GameEvent[] = [];
   let moved = relocate(state, player.id, pawn.id, position, true, events);
   const destination = pawnToTile(player.id, position);
+  const pickup =
+    destination?.kind === 'track'
+      ? moved.bonusPickups.find((pickup) => pickup.index === destination.index)
+      : undefined;
+  if (pickup) {
+    moved = {
+      ...moved,
+      bonusPickups: moved.bonusPickups.filter(
+        (item) => item.index !== pickup.index,
+      ),
+      players: moved.players.map((candidate) =>
+        candidate.id === player.id
+          ? {
+              ...candidate,
+              bonuses: {
+                ...candidate.bonuses,
+                [pickup.bonusId]: candidate.bonuses[pickup.bonusId] + 1,
+              },
+            }
+          : candidate,
+      ),
+    };
+    events.push({
+      type: 'BONUS_COLLECTED',
+      playerId: player.id,
+      bonusId: pickup.bonusId,
+    });
+  }
   const strategy =
     state.mode === 'tunisian' && destination?.kind === 'track'
       ? tileAt(destination.index)
@@ -353,10 +483,16 @@ export function applyAction(state: GameState, action: Action): Transition {
           die: null,
           consecutiveSixes: 0,
           winner: player.id,
+          extraRolls: 0,
+          bonusArmed: false,
+          bonusRollPending: false,
+          crazyMoves: 0,
         },
         events,
       };
     }
   }
+  if (state.crazyMoves > 0)
+    return continueRoll({ ...moved, crazyMoves: state.crazyMoves - 1 }, events);
   return afterMoveOrNoMoves(moved, 'move', events);
 }

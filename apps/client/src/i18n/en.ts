@@ -1,4 +1,28 @@
 export const en = {
+  bonuses: 'Stored bonuses',
+  bonusCrazy: 'Crazy +6 +6',
+  bonusCrazyHint:
+    'Make two moves of six, choosing a pawn for each, then play the original die.',
+  bonusCrazyMoves:
+    'Crazy: {count} moves of 6 left. Tap a pawn. Then play your {die}.',
+  errorCrazyPending: 'Finish the two crazy moves before using another bonus.',
+  errorCrazyNoMoves: 'No pawn can move six spaces.',
+  bonusExtra: 'Extra roll',
+  bonusHome: 'Return to yard',
+  bonusInventory: '{player}: {bonus}, {count} stored',
+  bonusExtraHint: 'After rolling, reserve another roll after your move.',
+  bonusHomeHint:
+    'After rolling, return one of your unfinished pawns to its yard.',
+  bonusChooseHome:
+    'Tap your highlighted pawn to return it to the yard. Tap the house again to cancel.',
+  bonusReserved: 'Extra roll reserved. Move a pawn first.',
+  bonusHint: 'Land on +, ⌂ or 🤪 to collect. Use after rolling.',
+  bonusCollected: '{player} collected: {bonus}.',
+  bonusUsed: '{player} used: {bonus}.',
+  errorBonusPhase: 'Use bonuses after rolling and before moving.',
+  errorBonusMissing: 'You do not have that bonus.',
+  errorBonusArmed: 'An extra roll is already reserved for this move.',
+  errorBonusTarget: 'Choose one of your own unfinished pawns outside the yard.',
   errorWait: 'Wait for the current animation before taking an action.',
   errorPawn: 'That pawn cannot move right now.',
   errorSelect: 'Select a highlighted pawn first.',

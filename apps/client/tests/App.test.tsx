@@ -57,7 +57,21 @@ describe('pass & play UI', () => {
         name: /^(Red|Green|Yellow|Blue) pawn \d$/,
       }),
     ).toHaveLength(count * 4);
+    expect(
+      screen
+        .getByLabelText('Ludo board')
+        .querySelectorAll('.pawn.in-yard .pawn-figure'),
+    ).toHaveLength(count * 4);
     expect(screen.getByRole('heading', { name: "Red's turn" })).toBeTruthy();
+    expect(
+      screen.queryByRole('button', {
+        name: /Move (Red|Green|Yellow|Blue) pawn/,
+      }),
+    ).toBeNull();
+    expect(
+      screen.getByRole('heading', { name: "Red's turn" }).parentElement
+        ?.className,
+    ).toBe('sr-only');
     const dice = screen.getAllByRole('button', { name: /Tap die to roll/ });
     expect(dice).toHaveLength(count);
     expect(dice.filter((die) => !die.hasAttribute('disabled'))).toHaveLength(1);
@@ -92,6 +106,8 @@ describe('pass & play UI', () => {
     ).toBe(true);
     await act(() => vi.runAllTimersAsync());
     const pawn = screen.getByRole('button', { name: 'Red pawn 1' });
+    expect(pawn.querySelector('.pawn-head')).not.toBeNull();
+    expect(pawn.querySelector('.pawn-label')?.textContent).toBe('1');
     expect(pawn.classList.contains('playable')).toBe(true);
     fireEvent.click(pawn);
     fireEvent.click(pawn);
@@ -103,6 +119,7 @@ describe('pass & play UI', () => {
     expect(localGameStore.getState().visualPositions['red-0']).toBe(-1);
     await act(() => vi.runAllTimersAsync());
     expect(localGameStore.getState().visualPositions['red-0']).toBe(0);
+    expect(pawn.classList.contains('in-yard')).toBe(false);
     expect(
       screen
         .getByRole('button', { name: 'Roll dice' })
@@ -132,7 +149,7 @@ describe('pass & play UI', () => {
       die.querySelector(`.die-cube.show-${expected}.landing`),
     ).not.toBeNull();
     expect(die.hasAttribute('disabled')).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Move Red pawn 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Red pawn 1' }));
     await act(() => vi.runAllTimersAsync());
     expect(die.hasAttribute('disabled')).toBe(false);
     fireEvent.click(die);
@@ -254,7 +271,7 @@ describe('pass & play UI', () => {
     render(<App />);
     await user.pointer({
       keys: '[TouchA]',
-      target: screen.getByRole('button', { name: 'Move Red pawn 2' }),
+      target: screen.getByRole('button', { name: 'Red pawn 2' }),
     });
     expect(localGameStore.getState().game?.players[0].pawns[1].position).toBe(
       1,
@@ -304,6 +321,11 @@ describe('pass & play UI', () => {
     expect(screen.queryByRole('heading', { name: 'Red wins!' })).toBeNull();
     act(() => localGameStore.getState().advanceAnimation());
     expect(screen.getByRole('heading', { name: 'Red wins!' })).toBeTruthy();
+    expect(
+      screen
+        .getByRole('heading', { name: 'Red wins!' })
+        .parentElement?.classList.contains('turn-banner'),
+    ).toBe(true);
     expect(
       screen.queryByRole('button', { name: 'Select a pawn to move' }),
     ).toBeNull();

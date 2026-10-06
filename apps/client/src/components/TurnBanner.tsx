@@ -17,16 +17,21 @@ export function TurnBanner() {
         ? t('congratulations')
         : game.phase === 'CHOOSE_TARGET'
           ? t('chooseTarget')
-          : game.phase === 'awaiting_move'
-            ? t('chooseMove', { die: game.die ?? 0 })
-            : game.consecutiveSixes > 0
-              ? t('extraRoll')
-              : game.players[game.currentPlayerIndex].skipNextTurn
-                ? t('skippedHint')
-                : t('passPhone');
+          : game.crazyMoves > 0
+            ? t('bonusCrazyMoves', {
+                count: game.crazyMoves,
+                die: game.die ?? 0,
+              })
+            : game.phase === 'awaiting_move'
+              ? t('chooseMove', { die: game.die ?? 0 })
+              : game.consecutiveSixes > 0
+                ? t('extraRoll')
+                : game.players[game.currentPlayerIndex].skipNextTurn
+                  ? t('skippedHint')
+                  : t('passPhone');
   return (
     <section
-      className={`turn-banner ${current}`}
+      className={won ? `turn-banner ${current}` : 'sr-only'}
       aria-live="polite"
       aria-atomic="true"
     >

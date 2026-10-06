@@ -9,6 +9,7 @@ interface PawnProps {
   playable: boolean;
   selected: boolean;
   finished: boolean;
+  inYard: boolean;
   onSelect(id: string): void;
 }
 
@@ -20,13 +21,14 @@ export function Pawn({
   playable,
   selected,
   finished,
+  inYard,
   onSelect,
 }: PawnProps) {
   const { t, playerName } = useTranslation();
   return (
     <button
       type="button"
-      className={`pawn ${playerId} ${playable ? 'playable' : ''} ${selected ? 'selected' : ''} ${finished ? 'finished' : ''}`}
+      className={`pawn ${playerId} ${inYard ? 'in-yard' : ''} ${playable ? 'playable' : ''} ${selected ? 'selected' : ''} ${finished ? 'finished' : ''}`}
       style={{
         left: `${((coordinate.x + 0.5) / 15) * 100}%`,
         top: `${((coordinate.y + 0.5) / 15) * 100}%`,
@@ -36,7 +38,12 @@ export function Pawn({
       aria-pressed={selected}
       onClick={() => onSelect(id)}
     >
-      {number}
+      <span className="pawn-figure" aria-hidden="true">
+        <span className="pawn-head" />
+        <span className="pawn-body" />
+        <span className="pawn-base" />
+        <span className="pawn-label">{number}</span>
+      </span>
     </button>
   );
 }

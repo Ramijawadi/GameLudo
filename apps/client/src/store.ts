@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
+import { FINISHED_POSITION } from '@ludo/engine';
 import type {
   Action,
   CardId,
@@ -7,6 +8,7 @@ import type {
   GameEvent,
   GameState,
   PlayerColor,
+  BonusId,
 } from '@ludo/engine';
 import { LocalController, type GameController } from './controller';
 
@@ -27,6 +29,10 @@ export interface LocalGameStore {
   rollCount: number;
   message: string;
   error: string | null;
+  homeBonusTargeting: boolean;
+  useBonus(bonusId: BonusId): void;
+  cancelHomeBonus(): void;
+  returnPawnHome(pawnId: string): void;
   start(options: CreateGameOptions): void;
   reset(): void;
   selectPawn(pawnId: string): void;
@@ -55,6 +61,7 @@ const initial = {
   rollCount: 0,
   message: '',
   error: null,
+  homeBonusTargeting: false,
 } satisfies Omit<
   LocalGameStore,
   | 'start'
@@ -62,6 +69,9 @@ const initial = {
   | 'selectPawn'
   | 'roll'
   | 'movePawn'
+  | 'useBonus'
+  | 'cancelHomeBonus'
+  | 'returnPawnHome'
   | 'moveSelected'
   | 'advanceAnimation'
   | 'chooseSelectedTarget'
@@ -96,6 +106,7 @@ export function createLocalGameStore(
           legalMoves: controller.getLegalMoves(),
           legalTargets: controller.getLegalTargets(),
           selectedPawnId: null,
+          homeBonusTargeting: false,
           message: '',
           lastMessageEvent: null,
           error: null,
@@ -156,6 +167,37 @@ export function createLocalGameStore(
       movePawn(pawnId) {
         dispatch({ type: 'MOVE_PAWN', pawnId });
       },
+      useBonus(bonusId) {
+        if (bonusId === 'extra_roll' || bonusId === 'crazy') {
+          dispatch({ type: 'USE_BONUS', bonusId });
+          return;
+        }
+        const { game, eventQueue, activeCard } = get();
+        const player = game?.players[game.currentPlayerIndex];
+        if (
+          !game?.bonusesEnabled ||
+          game.phase !== 'awaiting_move' ||
+          game.crazyMoves > 0 ||
+          eventQueue.length > 0 ||
+          activeCard ||
+          !player?.bonuses.return_home ||
+          !player.pawns.some(
+            (pawn) => pawn.position >= 0 && pawn.position < FINISHED_POSITION,
+          )
+        ) {
+          set({
+            error: 'Choose one of your own unfinished pawns outside the yard.',
+          });
+          return;
+        }
+        set({ homeBonusTargeting: true, error: null });
+      },
+      cancelHomeBonus() {
+        set({ homeBonusTargeting: false });
+      },
+      returnPawnHome(pawnId) {
+        dispatch({ type: 'USE_BONUS', bonusId: 'return_home', pawnId });
+      },
       chooseSelectedTarget() {
         const pawnId = get().selectedPawnId;
         if (!pawnId) {
@@ -174,6 +216,10 @@ export function createLocalGameStore(
         if (!event) return;
         const rest = eventQueue.slice(1);
         switch (event.type) {
+          case 'BONUS_COLLECTED':
+          case 'BONUS_USED':
+            set({ eventQueue: rest, lastMessageEvent: event });
+            break;
           case 'DICE_ROLLED':
             set({
               eventQueue: rest,

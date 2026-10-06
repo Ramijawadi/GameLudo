@@ -12,6 +12,7 @@ import { Preferences } from './components/Preferences';
 import { ReactionBar } from './components/ReactionBar';
 import { localizeError, useTranslation } from './i18n';
 import { tileRegistry } from '@ludo/engine';
+import { BonusPanel } from './components/BonusPanel';
 
 export function App() {
   const game = useGameStore((state) => state.game);
@@ -70,6 +71,7 @@ export function App() {
           </div>
           <RollButton />
           <PlayerPanel />
+          <BonusPanel />
           <ReactionBar />
         </main>
       )}

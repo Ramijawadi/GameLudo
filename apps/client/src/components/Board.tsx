@@ -64,6 +64,8 @@ export function Board() {
   const busy = useGameStore((state) => state.eventQueue.length > 0);
   const select = useGameStore((state) => state.selectPawn);
   const move = useGameStore((state) => state.movePawn);
+  const homeBonus = useGameStore((state) => state.homeBonusTargeting);
+  const returnHome = useGameStore((state) => state.returnPawnHome);
   const { t } = useTranslation();
   if (!game) return null;
 
@@ -103,18 +105,41 @@ export function Board() {
             game.mode === 'tunisian' && trackIndex !== -1
               ? tileAt(trackIndex)
               : undefined;
+          const bonus = game.bonusPickups.find(
+            (pickup) => pickup.index === trackIndex,
+          );
           return (
             <div
               key={index}
               className={`cell ${cell.className} ${special ? 'special-tile' : ''}`}
               title={
-                special
-                  ? `${t(`tile_${special.id}`)}: ${t(`effect_${special.id}`)}`
-                  : undefined
+                bonus
+                  ? t(
+                      bonus.bonusId === 'extra_roll'
+                        ? 'bonusExtra'
+                        : bonus.bonusId === 'crazy'
+                          ? 'bonusCrazy'
+                          : 'bonusHome',
+                    )
+                  : special
+                    ? `${t(`tile_${special.id}`)}: ${t(`effect_${special.id}`)}`
+                    : undefined
               }
               aria-hidden="true"
             >
-              {special ? tileSymbols[special.id] : cell.label}
+              {bonus ? (
+                <span className="bonus-pickup">
+                  {bonus.bonusId === 'extra_roll'
+                    ? '+'
+                    : bonus.bonusId === 'crazy'
+                      ? '🤪'
+                      : '⌂'}
+                </span>
+              ) : special ? (
+                tileSymbols[special.id]
+              ) : (
+                cell.label
+              )}
             </div>
           );
         })}
@@ -144,13 +169,25 @@ export function Board() {
               playable={
                 !busy &&
                 !card &&
-                (game.phase === 'CHOOSE_TARGET' ? targets : legal).includes(
-                  pawn.id,
-                )
+                (homeBonus
+                  ? pawn.playerId ===
+                      game.players[game.currentPlayerIndex].id &&
+                    pawn.position >= 0 &&
+                    pawn.position < FINISHED_POSITION
+                  : (game.phase === 'CHOOSE_TARGET' ? targets : legal).includes(
+                      pawn.id,
+                    ))
               }
               selected={selected === pawn.id}
               finished={pawn.position === FINISHED_POSITION}
-              onSelect={game.phase === 'CHOOSE_TARGET' ? select : move}
+              inYard={pawn.position === -1}
+              onSelect={
+                homeBonus
+                  ? returnHome
+                  : game.phase === 'CHOOSE_TARGET'
+                    ? select
+                    : move
+              }
             />
           );
         })}

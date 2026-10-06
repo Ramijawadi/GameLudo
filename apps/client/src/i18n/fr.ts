@@ -1,6 +1,35 @@
 import type { Messages } from './en';
 
 export const fr: Messages = {
+  bonuses: 'Bonus en réserve',
+  bonusCrazy: 'Crazy +6 +6',
+  bonusCrazyHint:
+    'Deux déplacements de six, un pion au choix pour chacun, puis jouez le dé initial.',
+  bonusCrazyMoves:
+    'Crazy : encore {count} déplacements de 6. Touchez un pion, puis jouez votre {die}.',
+  errorCrazyPending:
+    'Terminez les deux déplacements crazy avant un autre bonus.',
+  errorCrazyNoMoves: 'Aucun pion ne peut avancer de six cases.',
+  bonusExtra: 'Lancer supplémentaire',
+  bonusHome: 'Retour au départ',
+  bonusInventory: '{player} : {bonus}, {count} en réserve',
+  bonusExtraHint:
+    'Après le lancer, réservez un autre lancer après le déplacement.',
+  bonusHomeHint:
+    'Après le lancer, renvoyez un de vos pions non terminés au départ.',
+  bonusChooseHome:
+    'Touchez votre pion surligné pour le renvoyer au départ. Retouchez la maison pour annuler.',
+  bonusReserved: 'Lancer supplémentaire réservé. Déplacez un pion.',
+  bonusHint:
+    'Arrêtez-vous sur +, ⌂ ou 🤪 pour ramasser. Utilisez après le lancer.',
+  bonusCollected: '{player} a ramassé : {bonus}.',
+  bonusUsed: '{player} a utilisé : {bonus}.',
+  errorBonusPhase:
+    'Utilisez les bonus après le lancer et avant le déplacement.',
+  errorBonusMissing: 'Vous ne possédez pas ce bonus.',
+  errorBonusArmed:
+    'Un lancer supplémentaire est déjà réservé pour ce déplacement.',
+  errorBonusTarget: 'Choisissez un de vos pions non terminés hors du départ.',
   errorWait: 'Attendez la fin de l’animation avant de jouer.',
   errorPawn: 'Ce pion ne peut pas jouer maintenant.',
   errorSelect: 'Choisissez d’abord un pion surligné.',

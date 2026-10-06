@@ -19,7 +19,7 @@ if (moves.length > 0) {
 }
 ```
 
-- `createGame({ seed, players?, mode? })`: unsigned 32-bit seed (including zero), two
+- `createGame({ seed, players?, mode?, bonuses? })`: unsigned 32-bit seed (including zero), two
   to four distinct colors in turn order. Defaults to red, green, yellow, blue.
 - `applyAction(state, action)`: returns `{ state, events }` without mutating its
   input. Illegal actions throw. Pawn IDs are `<color>-<index>` with indices 0..3.
@@ -48,6 +48,35 @@ if (moves.length > 0) {
   except on a six.
 - Captures and finishing a pawn do not themselves grant extra turns.
 - Finishing all four pawns wins immediately, including on a six.
+
+## Optional collectible bonuses
+
+Set `bonuses: true` to enable single-use pickups at global track indices
+12/38 (`extra_roll`), 24/50 (`return_home`) and 4/30 (`crazy`). The default engine behavior
+keeps bonuses disabled. Pickups are awarded only on the initial exact pawn
+landing, not when passing, being moved by a card, or reaching a tile-effect
+destination. Collected pickups are removed globally and stored in the
+player's `bonuses` inventory.
+
+During `awaiting_move`, dispatch `USE_BONUS` with `bonusId: 'extra_roll'`
+to reserve an extra roll after moving (one reservation per move). Natural
+six rolls do not consume that credit; a subsequent non-six move or no-move
+resolution does. Third-six forfeits and victory clear pending credits.
+Bonus rolls are part of the current turn and do not trigger a deferred skip.
+
+Dispatch `USE_BONUS` with `bonusId: 'return_home'` and an own unfinished
+`pawnId` outside the yard to return it to position -1. The die is retained
+and legal moves recomputed, including normal no-move resolution.
+
+`BONUS_COLLECTED` and `BONUS_USED` events identify the player and bonus.
+`USE_BONUS` with `bonusId: 'crazy'` sets `crazyMoves` to two. Each subsequent
+`MOVE_PAWN` uses six while preserving the original die; pawns are independently
+chosen and normal captures, pickups, and tile effects apply. It consumes no
+randomness and grants no natural-six bonus or card. Unplayable remaining
+sixes are skipped, then the original die resumes. Victory clears the pending
+moves, and other bonuses cannot be used during this sequence.
+Inventories, remaining pickups, and pending extra-roll state are serialized
+and deterministic, and moving or using a bonus consumes no randomness.
 
 ## Positions and board coordinates
 
@@ -120,7 +149,7 @@ reason `skipped`. Penalties and `pendingCard` are serialized in game state.
 
 ## Replay
 
-Store the original seed, mode, player order, and ordered actions. Starting with
+Store the original seed, mode, bonuses option, player order, and ordered actions. Starting with
 `createGame` and applying those same actions reproduces every state and event.
 States and actions are JSON-serializable; persisted RNG state also allows exact
 resumption mid-game. Changing rules or RNG requires replay versioning.

@@ -6,25 +6,15 @@ export function PlayerPanel() {
   const game = useGameStore((state) => state.game);
   const positions = useGameStore((state) => state.visualPositions);
   const current = useGameStore((state) => state.displayedPlayerId);
-  const legal = useGameStore((state) => state.legalMoves);
-  const targets = useGameStore((state) => state.legalTargets);
   const card = useGameStore((state) => state.activeCard);
   const selected = useGameStore((state) => state.selectedPawnId);
   const busy = useGameStore((state) => state.eventQueue.length > 0);
-  const select = useGameStore((state) => state.selectPawn);
-  const move = useGameStore((state) => state.movePawn);
   const chooseTarget = useGameStore((state) => state.chooseSelectedTarget);
   const { t, playerName } = useTranslation();
   if (!game) return null;
   const active = game.players.find((player) => player.id === current);
   if (!active) throw new Error('Missing current player.');
   const targeting = game.phase === 'CHOOSE_TARGET';
-  const selectablePlayers = targeting
-    ? game.players.filter((player) =>
-        player.pawns.some((pawn) => targets.includes(pawn.id)),
-      )
-    : [active];
-  const playable = targeting ? targets : legal;
   return (
     <>
       <ul className="player-list" aria-label={t('progress')}>
@@ -46,50 +36,17 @@ export function PlayerPanel() {
           </li>
         ))}
       </ul>
-      {game.phase !== 'finished' && (
+      {targeting && (
         <div className={`pawn-picker ${active.id}`}>
-          <span className="picker-label sr-only">
-            {t(targeting ? 'targetPicker' : 'picker')}
-          </span>
-          <div className="pawn-groups">
-            {selectablePlayers.map((player) => (
-              <div
-                key={player.id}
-                className="pawn-choices"
-                role="group"
-                aria-label={t('selection', { player: playerName(player.id) })}
-              >
-                {player.pawns.map((pawn, index) => (
-                  <button
-                    key={pawn.id}
-                    type="button"
-                    aria-label={t(targeting ? 'selectPawn' : 'moveNamedPawn', {
-                      player: playerName(player.id),
-                      number: index + 1,
-                    })}
-                    aria-pressed={targeting ? selected === pawn.id : undefined}
-                    disabled={busy || !!card || !playable.includes(pawn.id)}
-                    className={`pawn-choice ${player.id} ${playable.includes(pawn.id) && !busy && !card ? 'playable' : ''}`}
-                    onClick={() =>
-                      targeting ? select(pawn.id) : move(pawn.id)
-                    }
-                  >
-                    <span className="pawn-number">{index + 1}</span>
-                  </button>
-                ))}
-              </div>
-            ))}
-          </div>
-          {targeting && (
-            <button
-              className="primary move-button"
-              type="button"
-              disabled={busy || !!card || !selected}
-              onClick={chooseTarget}
-            >
-              {t('confirmTarget')}
-            </button>
-          )}
+          <span className="picker-label sr-only">{t('targetPicker')}</span>
+          <button
+            className="primary move-button"
+            type="button"
+            disabled={busy || !!card || !selected}
+            onClick={chooseTarget}
+          >
+            {t('confirmTarget')}
+          </button>
         </div>
       )}
     </>

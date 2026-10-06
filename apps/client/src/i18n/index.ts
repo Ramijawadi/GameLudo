@@ -32,6 +32,12 @@ const errorKeys = [
   'errorSeed',
   'errorPlayers',
   'errorMode',
+  'errorBonusPhase',
+  'errorBonusMissing',
+  'errorBonusArmed',
+  'errorBonusTarget',
+  'errorCrazyPending',
+  'errorCrazyNoMoves',
 ] as const;
 
 export function localizeError(language: Language, message: string): string {
@@ -72,6 +78,23 @@ export function useTranslation() {
 export function eventMessage(language: Language, event: GameEvent): string {
   const player = translate(language, event.playerId);
   switch (event.type) {
+    case 'BONUS_COLLECTED':
+    case 'BONUS_USED':
+      return translate(
+        language,
+        event.type === 'BONUS_COLLECTED' ? 'bonusCollected' : 'bonusUsed',
+        {
+          player,
+          bonus: translate(
+            language,
+            event.bonusId === 'extra_roll'
+              ? 'bonusExtra'
+              : event.bonusId === 'crazy'
+                ? 'bonusCrazy'
+                : 'bonusHome',
+          ),
+        },
+      );
     case 'DICE_ROLLED':
       return translate(language, 'rolled', { player, value: event.value });
     case 'PAWN_CAPTURED':

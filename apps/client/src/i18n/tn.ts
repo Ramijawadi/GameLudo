@@ -1,6 +1,29 @@
 import type { Messages } from './en';
 
 export const tn: Messages = {
+  bonuses: 'Bonus ma7foudhin',
+  bonusCrazy: 'Crazy +6 +6',
+  bonusCrazyHint:
+    'Zouz mouvements b six, e5tar pion kol marra, ba3d el dé el asli.',
+  bonusCrazyMoves:
+    'Crazy: {count} mouvements b 6 mezelou. Enzel 3al pion, ba3d el dé {die}.',
+  errorCrazyPending: 'Kammel zouz mouvements crazy 9bal bonus e5er.',
+  errorCrazyNoMoves: '7atta pion ma ynajjem yemchi six.',
+  bonusExtra: 'Lancer zeyed',
+  bonusHome: 'Rajja3 lel départ',
+  bonusInventory: '{player}: {bonus}, {count} ma7foudhin',
+  bonusExtraHint: 'Ba3d el dé, 7ot lancer zeyed ba3d el mouvement.',
+  bonusHomeHint: 'Ba3d el dé, rajja3 pion mte3ek lel départ.',
+  bonusChooseHome:
+    'Enzel 3al pion el mdhawwi bech yrawwa7. Enzel 3al dar marra o5ra bech talghi.',
+  bonusReserved: 'Lancer zeyed ma7foudh. 7arrek pion.',
+  bonusHint: 'O9ef 3al +, ⌂ wala 🤪 bech tejma3. Esta3mel ba3d el dé.',
+  bonusCollected: '{player} jama3: {bonus}.',
+  bonusUsed: '{player} esta3mel: {bonus}.',
+  errorBonusPhase: 'Esta3mel bonus ba3d el dé w 9bal el mouvement.',
+  errorBonusMissing: 'Ma 3andekch el bonus hedha.',
+  errorBonusArmed: 'Lancer zeyed deja ma7foudh lel mouvement hedha.',
+  errorBonusTarget: 'E5tar pion mte3ek barra mel départ w mazel ma wsalch.',
   errorWait: 'Estanna el animation toufa bech tel3ab.',
   errorPawn: 'El pion hedha ma ynajemch yemchi taw.',
   errorSelect: 'E5tar pion mdhawwi louel.',

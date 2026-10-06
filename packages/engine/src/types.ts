@@ -10,9 +10,22 @@ export interface Player {
   readonly id: PlayerColor;
   readonly pawns: readonly Pawn[];
   readonly skipNextTurn: boolean;
+  readonly bonuses: Readonly<Record<BonusId, number>>;
+}
+
+export type BonusId = 'extra_roll' | 'return_home' | 'crazy';
+export interface BonusPickup {
+  readonly index: number;
+  readonly bonusId: BonusId;
 }
 
 export interface GameState {
+  readonly bonusesEnabled: boolean;
+  readonly bonusPickups: readonly BonusPickup[];
+  readonly extraRolls: number;
+  readonly bonusArmed: boolean;
+  readonly bonusRollPending: boolean;
+  readonly crazyMoves: number;
   readonly players: readonly Player[];
   readonly currentPlayerIndex: number;
   readonly phase:
@@ -29,6 +42,13 @@ export interface GameState {
 export type Action =
   | { readonly type: 'ROLL_DICE' }
   | { readonly type: 'MOVE_PAWN'; readonly pawnId: string }
+  | { readonly type: 'USE_BONUS'; readonly bonusId: 'extra_roll' }
+  | { readonly type: 'USE_BONUS'; readonly bonusId: 'crazy' }
+  | {
+      readonly type: 'USE_BONUS';
+      readonly bonusId: 'return_home';
+      readonly pawnId: string;
+    }
   | { readonly type: 'CHOOSE_TARGET'; readonly pawnId: string };
 
 export type TileId =
@@ -45,6 +65,11 @@ export type TileId =
 export type CardId = 'maman' | '3asba' | 'el-hassel' | 'tchitcha';
 
 export type GameEvent =
+  | {
+      readonly type: 'BONUS_COLLECTED' | 'BONUS_USED';
+      readonly playerId: PlayerColor;
+      readonly bonusId: BonusId;
+    }
   | {
       readonly type: 'DICE_ROLLED';
       readonly playerId: PlayerColor;
@@ -100,6 +125,7 @@ export interface Transition {
 }
 
 export interface CreateGameOptions {
+  readonly bonuses?: boolean;
   readonly seed: number;
   readonly players?: readonly PlayerColor[];
   readonly mode?: 'standard' | 'tunisian';
