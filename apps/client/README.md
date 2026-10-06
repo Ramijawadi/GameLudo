@@ -15,7 +15,14 @@ Open the Vite URL printed in the terminal. To play on a phone, use the computer'
 LAN IP with that port on the same Wi-Fi network (allow the dev server through
 the firewall if necessary). Vite binds to all interfaces for local development.
 
-Choose the player count and start. Each player has four numbered pawns. Roll,
+Choose the player count and start. Each player has four numbered pawns and a
+color-matched die beside their board corner (red top-left, green top-right,
+yellow bottom-right, blue bottom-left). Tap the current player's die or the
+**Roll dice** button for a random result from 1 to 6. Touch starts the roll
+immediately on contact, without waiting for a click; releasing does not roll
+again. Mouse clicks and keyboard activation also work. Other players' dice stay
+locked, and each die keeps that player's latest result. All roll controls lock
+during playback and while a move or card target is pending. Roll,
 tap a highlighted pawn on the board or its larger numbered selection button,
 then confirm the move. This second selection surface makes stacked pawns easy
 to choose on a small screen. Pass the phone when the turn changes.
@@ -39,7 +46,8 @@ to choose on a small screen. Pass the phone when the turn changes.
   lands on the rolled face, flashes gold on a six and shows a 🔥 streak badge.
 - The game screen fills exactly one phone viewport (`100dvh`), with no page
   scrolling. The board is sized from the space left over by the header, turn
-  banner, dice stage, player chips, pawn picker and reactions. Its symbols
+  banner, roll button, player chips, pawn picker and reactions. Corner dice
+  occupy reserved space above and below the board without covering pawns. Its symbols
   scale with container units. Reduced motion skips the roll animation.
 - Numbered selection circles are 40–46px, with explicit selected and
   playable states and per-player colors.

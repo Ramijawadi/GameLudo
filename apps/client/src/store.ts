@@ -22,6 +22,7 @@ export interface LocalGameStore {
   visualPositions: Readonly<Record<string, number>>;
   displayedPlayerId: PlayerColor | null;
   lastDie: number | null;
+  diceValues: Partial<Record<PlayerColor, number>>;
   lastRollPlayerId: PlayerColor | null;
   rollCount: number;
   message: string;
@@ -48,6 +49,7 @@ const initial = {
   visualPositions: {},
   displayedPlayerId: null,
   lastDie: null,
+  diceValues: {},
   lastRollPlayerId: null,
   rollCount: 0,
   message: '',
@@ -171,6 +173,10 @@ export function createLocalGameStore(
             set({
               eventQueue: rest,
               lastDie: event.value,
+              diceValues: {
+                ...get().diceValues,
+                [event.playerId]: event.value,
+              },
               lastRollPlayerId: event.playerId,
               rollCount: get().rollCount + 1,
               message: `${colorLabel(event.playerId)} rolled ${event.value}.`,

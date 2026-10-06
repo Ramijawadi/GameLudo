@@ -58,6 +58,7 @@ export const tn: Messages = {
   selectMove: 'E5tar pion',
   confirmTarget: 'Aked el cible',
   roll: 'Armi el dé',
+  tapDie: 'enzel 3al dé bech tarmi',
   playing: 'Yemchi...',
   selectBelow: 'E5tar pion men louta',
   complete: 'Wfet el partie',

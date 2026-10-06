@@ -51,6 +51,14 @@ describe('pass & play UI', () => {
       }),
     ).toHaveLength(count * 4);
     expect(screen.getByRole('heading', { name: "Red's turn" })).toBeTruthy();
+    const dice = screen.getAllByRole('button', { name: /Tap die to roll/ });
+    expect(dice).toHaveLength(count);
+    expect(dice.filter((die) => !die.hasAttribute('disabled'))).toHaveLength(1);
+    expect(
+      screen
+        .getByRole('button', { name: 'Red: Tap die to roll' })
+        .closest('.corner-dice.red')?.parentElement?.className,
+    ).toBe('board-frame');
     expect(
       screen
         .getByRole('button', { name: 'Roll dice' })
@@ -89,6 +97,113 @@ describe('pass & play UI', () => {
         .getByRole('button', { name: 'Roll dice' })
         .hasAttribute('disabled'),
     ).toBe(false);
+  });
+
+  it('rolls once when the die is tapped, animates, and lands on the engine result', async () => {
+    vi.useFakeTimers();
+    const seed = sixSeed();
+    const expected = rollDie(seed).value;
+    localGameStore.getState().start({ seed, players: ['red', 'yellow'] });
+    render(<App />);
+    const die = screen.getByRole('button', { name: 'Red: Tap die to roll' });
+    fireEvent.click(die);
+    expect(die.hasAttribute('disabled')).toBe(true);
+    expect(die.querySelector('.die-cube.spinning')).not.toBeNull();
+    fireEvent.click(die);
+    expect(
+      localGameStore
+        .getState()
+        .eventQueue.filter((event) => event.type === 'DICE_ROLLED'),
+    ).toHaveLength(1);
+    await act(() => vi.runAllTimersAsync());
+    expect(localGameStore.getState().lastDie).toBe(expected);
+    expect(
+      die.querySelector(`.die-cube.show-${expected}.landing`),
+    ).not.toBeNull();
+    expect(die.hasAttribute('disabled')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Select Red pawn 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Move pawn 1' }));
+    await act(() => vi.runAllTimersAsync());
+    expect(die.hasAttribute('disabled')).toBe(false);
+    fireEvent.click(die);
+    await act(() => vi.runAllTimersAsync());
+    expect(localGameStore.getState().lastDie).toBe(
+      rollDie(rollDie(seed).state).value,
+    );
+    expect(localGameStore.getState().rollCount).toBe(2);
+  });
+
+  it.each(['Roll dice', 'Red: Tap die to roll'])(
+    'rolls immediately on touch for %s without rolling again on release',
+    async (name) => {
+      const user = userEvent.setup();
+      localGameStore.getState().start({ seed: 1, players: ['red', 'yellow'] });
+      render(<App />);
+      const control = screen.getByRole('button', { name });
+      await user.pointer({ keys: '[TouchA>]', target: control });
+      expect(
+        localGameStore
+          .getState()
+          .eventQueue.filter((event) => event.type === 'DICE_ROLLED'),
+      ).toHaveLength(1);
+      act(() => {
+        while (localGameStore.getState().eventQueue.length > 0) {
+          localGameStore.getState().advanceAnimation();
+        }
+      });
+      expect(localGameStore.getState().rollCount).toBe(1);
+      await user.pointer({ keys: '[/TouchA]', target: control });
+      expect(localGameStore.getState().eventQueue).toHaveLength(0);
+      expect(localGameStore.getState().rollCount).toBe(1);
+      expect(localGameStore.getState().error).toBeNull();
+    },
+  );
+
+  it.each(['Roll dice', 'Red: Tap die to roll'])(
+    'keeps keyboard activation working for %s',
+    async (name) => {
+      const user = userEvent.setup();
+      localGameStore.getState().start({ seed: 1 });
+      render(<App />);
+      screen.getByRole('button', { name }).focus();
+      await user.keyboard('{Enter}');
+      expect(
+        localGameStore
+          .getState()
+          .eventQueue.some((event) => event.type === 'DICE_ROLLED'),
+      ).toBe(true);
+    },
+  );
+
+  it('locks other corners and hands rolling to the next player while retaining each result', async () => {
+    vi.useFakeTimers();
+    localGameStore.getState().start({ seed: 1, players: ['red', 'yellow'] });
+    render(<App />);
+    const red = screen.getByRole('button', { name: 'Red: Tap die to roll' });
+    const yellow = screen.getByRole('button', {
+      name: 'Yellow: Tap die to roll',
+    });
+    expect(yellow.hasAttribute('disabled')).toBe(true);
+    fireEvent.click(yellow);
+    expect(localGameStore.getState().eventQueue).toHaveLength(0);
+    fireEvent.click(red);
+    expect(yellow.querySelector('.spinning')).toBeNull();
+    await act(() => vi.runAllTimersAsync());
+    expect(red.hasAttribute('disabled')).toBe(true);
+    expect(yellow.hasAttribute('disabled')).toBe(false);
+    expect(red.querySelector('.die-cube.show-4')).not.toBeNull();
+    fireEvent.click(yellow);
+    expect(yellow.querySelector('.die-cube.spinning')).not.toBeNull();
+    await act(() => vi.runAllTimersAsync());
+    const expected = rollDie(rollDie(1).state).value;
+    expect(yellow.querySelector(`.die-cube.show-${expected}`)).not.toBeNull();
+    expect(red.querySelector('.die-cube.show-4')).not.toBeNull();
+    expect(localGameStore.getState().diceValues).toEqual({
+      red: 4,
+      yellow: expected,
+    });
+    act(() => localGameStore.getState().reset());
+    expect(localGameStore.getState().diceValues).toEqual({});
   });
 
   it('offers separate large selection buttons for overlapping pawns', async () => {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Board } from './components/Board';
-import { Dice } from './components/Dice';
+import { RollButton } from './components/Dice';
 import { PlayerPanel } from './components/PlayerPanel';
 import { ResetDialog } from './components/ResetDialog';
 import { TurnBanner } from './components/TurnBanner';
@@ -68,7 +68,7 @@ export function App() {
           <div className="board-area">
             <Board />
           </div>
-          <Dice />
+          <RollButton />
           <PlayerPanel />
           <ReactionBar />
         </main>

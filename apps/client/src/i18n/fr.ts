@@ -59,6 +59,7 @@ export const fr: Messages = {
   selectMove: 'Choisissez un pion',
   confirmTarget: 'Confirmer la cible',
   roll: 'Lancer le dé',
+  tapDie: 'Toucher le dé pour lancer',
   playing: 'Animation...',
   selectBelow: 'Choisissez un pion ci-dessous',
   complete: 'Partie terminée',

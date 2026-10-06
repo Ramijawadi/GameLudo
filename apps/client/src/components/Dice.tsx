@@ -1,5 +1,7 @@
 import { useGameStore } from '../store';
 import { useTranslation } from '../i18n';
+import type { PlayerColor } from '@ludo/engine';
+import { useRef, type MouseEvent, type PointerEvent } from 'react';
 
 const pips: Record<number, readonly number[]> = {
   1: [4],
@@ -12,34 +14,69 @@ const pips: Record<number, readonly number[]> = {
 
 const faces = [1, 2, 3, 4, 5, 6] as const;
 
-export function Dice() {
+function useRollControls(playerId?: PlayerColor) {
   const game = useGameStore((state) => state.game);
-  const value = useGameStore((state) => state.lastDie);
-  const rollPlayer = useGameStore((state) => state.lastRollPlayerId);
-  const rollCount = useGameStore((state) => state.rollCount);
   const current = useGameStore((state) => state.displayedPlayerId);
   const head = useGameStore((state) => state.eventQueue[0]);
   const busy = useGameStore((state) => state.eventQueue.length > 0);
   const card = useGameStore((state) => state.activeCard);
-  const { t, playerName } = useTranslation();
   const roll = useGameStore((state) => state.roll);
-  const rolling = head?.type === 'DICE_ROLLED';
-  const canRoll = game?.phase === 'awaiting_roll' && !busy && !card;
-  const color = rolling ? head.playerId : (rollPlayer ?? current ?? '');
-  const streak = !busy && game ? game.consecutiveSixes : 0;
-  const motion = rolling ? 'spinning' : rollCount > 0 ? 'landing' : '';
+  const suppressTouchClick = useRef(false);
+  const canRoll =
+    game?.phase === 'awaiting_roll' &&
+    !busy &&
+    !card &&
+    (!playerId || current === playerId);
+  const handleRoll = () => {
+    roll();
+  };
+  const handlePointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    suppressTouchClick.current = false;
+    if (event.pointerType !== 'touch' || !canRoll) return;
+    suppressTouchClick.current = true;
+    handleRoll();
+  };
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    // Touch already rolled on contact; ignore its subsequent synthetic click.
+    const duplicateTouch = suppressTouchClick.current && event.detail > 0;
+    suppressTouchClick.current = false;
+    if (!duplicateTouch && canRoll) handleRoll();
+  };
+  return { game, current, head, busy, canRoll, handlePointerDown, handleClick };
+}
+
+export function Dice({ playerId }: { playerId: PlayerColor }) {
+  const { game, current, head, busy, canRoll, handlePointerDown, handleClick } =
+    useRollControls(playerId);
+  const value = useGameStore((state) => state.diceValues[playerId]);
+  const rollPlayer = useGameStore((state) => state.lastRollPlayerId);
+  const { t, playerName } = useTranslation();
+  const rolling = head?.type === 'DICE_ROLLED' && head.playerId === playerId;
+  const ready = canRoll && current === playerId;
+  const streak =
+    !busy && game && current === playerId ? game.consecutiveSixes : 0;
+  const motion = rolling
+    ? 'spinning'
+    : rollPlayer === playerId && value
+      ? 'landing'
+      : '';
   return (
-    <div className={`dice-stage ${color} ${canRoll ? 'ready' : ''}`}>
-      <div
+    <div className={`corner-dice ${playerId} ${ready ? 'ready' : ''}`}>
+      <button
+        type="button"
         className={`dice-tray ${rolling ? 'rolling' : ''} ${!rolling && value === 6 ? 'six' : ''}`}
+        aria-label={`${playerName(playerId)}: ${t('tapDie')}`}
+        disabled={!ready}
+        onPointerDown={handlePointerDown}
+        onClick={handleClick}
       >
         <span className="tray-glow" aria-hidden="true" />
         <span className="die-shadow" aria-hidden="true" />
-        <div
-          key={rolling ? 'rolling' : `landed-${rollCount}`}
+        <span
+          key={rolling ? 'rolling' : `landed-${value ?? 1}`}
           className={`die-bounce ${motion}`}
         >
-          <div
+          <span
             className={`die-cube show-${value ?? 1} ${motion}`}
             role="img"
             aria-label={
@@ -47,7 +84,7 @@ export function Dice() {
                 ? t('rolling')
                 : value
                   ? t('rolled', {
-                      player: rollPlayer ? playerName(rollPlayer) : '',
+                      player: playerName(playerId),
                       value,
                     })
                   : t('noRoll')
@@ -65,8 +102,8 @@ export function Dice() {
                 ))}
               </span>
             ))}
-          </div>
-        </div>
+          </span>
+        </span>
         {streak > 0 && (
           <span
             className="six-streak"
@@ -75,12 +112,24 @@ export function Dice() {
             {'🔥'.repeat(streak)}
           </span>
         )}
-      </div>
+      </button>
+    </div>
+  );
+}
+
+export function RollButton() {
+  const { game, current, head, busy, canRoll, handlePointerDown, handleClick } =
+    useRollControls();
+  const { t } = useTranslation();
+  const color = head?.type === 'DICE_ROLLED' ? head.playerId : (current ?? '');
+  return (
+    <div className={`dice-stage ${color} ${canRoll ? 'ready' : ''}`}>
       <button
-        className={`primary roll-button ${rolling ? head.playerId : (current ?? '')}`}
+        className="primary roll-button"
         type="button"
         disabled={!canRoll}
-        onClick={roll}
+        onPointerDown={handlePointerDown}
+        onClick={handleClick}
       >
         {busy
           ? t('playing')

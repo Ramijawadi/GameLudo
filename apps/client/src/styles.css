@@ -252,14 +252,19 @@ legend {
 }
 .board-area {
   flex: 1 1 0;
-  min-height: 120px;
-  max-height: min(calc(100vw - 20px), 490px);
+  min-height: 0;
+  max-height: min(calc(100vw + 84px), 594px);
   container-type: size;
   display: grid;
   place-items: center;
 }
+.board-frame {
+  width: min(100cqw, calc(100cqh - 104px));
+  aspect-ratio: 1;
+  position: relative;
+}
 .board {
-  width: min(100cqw, 100cqh);
+  width: 100%;
   aspect-ratio: 1;
   position: relative;
   display: grid;
@@ -354,6 +359,9 @@ legend {
   width: 96px;
   height: 64px;
   display: grid;
+  border: 0;
+  padding: 0;
+  color: inherit;
   place-items: center;
   perspective: 420px;
   border-radius: 18px;
@@ -368,6 +376,12 @@ legend {
     inset 0 -2px 0 #ffffff1a,
     0 0 0 2px var(--color, #263f32),
     0 4px 0 #d9d9c9;
+}
+.dice-tray:disabled {
+  opacity: 1;
+}
+.dice-tray:focus-visible {
+  outline-offset: 5px;
 }
 .tray-glow {
   position: absolute;
@@ -398,6 +412,7 @@ legend {
   animation: shadow-hop 180ms ease-in-out infinite alternate;
 }
 .die-bounce {
+  display: block;
   width: var(--size);
   height: var(--size);
   transform-style: preserve-3d;
@@ -409,6 +424,7 @@ legend {
   animation: die-drop 560ms cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 .die-cube {
+  display: block;
   --tilt: rotateX(-20deg) rotateY(28deg);
   --rx: 0deg;
   --ry: 0deg;
@@ -524,6 +540,48 @@ legend {
 }
 .dice-stage.ready .roll-button {
   animation: ready-pulse 1.6s ease-in-out infinite;
+}
+.corner-dice {
+  position: absolute;
+  z-index: 5;
+}
+.corner-dice.red,
+.corner-dice.green {
+  top: -52px;
+}
+.corner-dice.blue,
+.corner-dice.yellow {
+  bottom: -52px;
+}
+.corner-dice.red,
+.corner-dice.blue {
+  left: 0;
+}
+.corner-dice.green,
+.corner-dice.yellow {
+  right: 0;
+}
+.corner-dice .dice-tray {
+  --size: 28px;
+  width: 48px;
+  height: 44px;
+  border-radius: 12px;
+}
+.corner-dice .die-face {
+  padding: 4px;
+  gap: 2px;
+  border-radius: 6px;
+}
+.corner-dice .die-shadow {
+  width: 26px;
+  bottom: 4px;
+}
+.corner-dice .dice-tray:disabled {
+  opacity: 0.65;
+}
+.corner-dice.ready .dice-tray {
+  outline: 2px solid var(--color);
+  outline-offset: 3px;
 }
 @keyframes die-spin {
   from {

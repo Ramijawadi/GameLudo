@@ -15,6 +15,7 @@ import { useGameStore } from '../store';
 import { Pawn } from './Pawn';
 import { useTranslation } from '../i18n';
 import { tileSymbols } from '../tileSymbols';
+import { Dice } from './Dice';
 
 const yardOrigins: Record<PlayerColor, Coordinate> = {
   red: { x: 0, y: 0 },
@@ -87,66 +88,72 @@ export function Board() {
   );
 
   return (
-    <div className="board" aria-label={t('board')}>
-      {cells.map((cell, index) => {
-        const trackIndex = TRACK_COORDINATES.findIndex(
-          (tile) => tile.x === index % 15 && tile.y === Math.floor(index / 15),
-        );
-        const special =
-          game.mode === 'tunisian' && trackIndex !== -1
-            ? tileAt(trackIndex)
-            : undefined;
-        return (
-          <div
-            key={index}
-            className={`cell ${cell.className} ${special ? 'special-tile' : ''}`}
-            title={
-              special
-                ? `${t(`tile_${special.id}`)}: ${t(`effect_${special.id}`)}`
-                : undefined
-            }
-            aria-hidden="true"
-          >
-            {special ? tileSymbols[special.id] : cell.label}
-          </div>
-        );
-      })}
-      {pawns.map((pawn) => {
-        const stack = pawns.filter(
-          (other) =>
-            other.coordinate.x === pawn.coordinate.x &&
-            other.coordinate.y === pawn.coordinate.y,
-        );
-        const index = stack.findIndex((other) => other.id === pawn.id);
-        const coordinate =
-          stack.length > 1
-            ? {
-                x: pawn.coordinate.x + (index % 2 === 0 ? -0.18 : 0.18),
-                y:
-                  pawn.coordinate.y +
-                  (Math.floor(index / 2) -
-                    Math.floor((stack.length - 1) / 2) / 2) *
-                    0.24,
+    <div className="board-frame">
+      {game.players.map((player) => (
+        <Dice key={player.id} playerId={player.id} />
+      ))}
+      <div className="board" aria-label={t('board')}>
+        {cells.map((cell, index) => {
+          const trackIndex = TRACK_COORDINATES.findIndex(
+            (tile) =>
+              tile.x === index % 15 && tile.y === Math.floor(index / 15),
+          );
+          const special =
+            game.mode === 'tunisian' && trackIndex !== -1
+              ? tileAt(trackIndex)
+              : undefined;
+          return (
+            <div
+              key={index}
+              className={`cell ${cell.className} ${special ? 'special-tile' : ''}`}
+              title={
+                special
+                  ? `${t(`tile_${special.id}`)}: ${t(`effect_${special.id}`)}`
+                  : undefined
               }
-            : pawn.coordinate;
-        return (
-          <Pawn
-            key={pawn.id}
-            {...pawn}
-            coordinate={coordinate}
-            playable={
-              !busy &&
-              !card &&
-              (game.phase === 'CHOOSE_TARGET' ? targets : legal).includes(
-                pawn.id,
-              )
-            }
-            selected={selected === pawn.id}
-            finished={pawn.position === FINISHED_POSITION}
-            onSelect={select}
-          />
-        );
-      })}
+              aria-hidden="true"
+            >
+              {special ? tileSymbols[special.id] : cell.label}
+            </div>
+          );
+        })}
+        {pawns.map((pawn) => {
+          const stack = pawns.filter(
+            (other) =>
+              other.coordinate.x === pawn.coordinate.x &&
+              other.coordinate.y === pawn.coordinate.y,
+          );
+          const index = stack.findIndex((other) => other.id === pawn.id);
+          const coordinate =
+            stack.length > 1
+              ? {
+                  x: pawn.coordinate.x + (index % 2 === 0 ? -0.18 : 0.18),
+                  y:
+                    pawn.coordinate.y +
+                    (Math.floor(index / 2) -
+                      Math.floor((stack.length - 1) / 2) / 2) *
+                      0.24,
+                }
+              : pawn.coordinate;
+          return (
+            <Pawn
+              key={pawn.id}
+              {...pawn}
+              coordinate={coordinate}
+              playable={
+                !busy &&
+                !card &&
+                (game.phase === 'CHOOSE_TARGET' ? targets : legal).includes(
+                  pawn.id,
+                )
+              }
+              selected={selected === pawn.id}
+              finished={pawn.position === FINISHED_POSITION}
+              onSelect={select}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

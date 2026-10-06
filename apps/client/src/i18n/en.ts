@@ -56,6 +56,7 @@ export const en = {
   selectMove: 'Select a pawn to move',
   confirmTarget: 'Confirm target',
   roll: 'Roll dice',
+  tapDie: 'Tap die to roll',
   playing: 'Playing...',
   selectBelow: 'Select a pawn below',
   complete: 'Game complete',
