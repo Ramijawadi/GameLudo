@@ -13,7 +13,7 @@ import { translate, usePreferences } from '../src/i18n';
 import { en } from '../src/i18n/en';
 import { fr } from '../src/i18n/fr';
 import { tn } from '../src/i18n/tn';
-import { playEventSound, toggleSound } from '../src/sounds';
+import { playEventSound, resumeSound, toggleSound } from '../src/sounds';
 
 function doubleSixSeed(cardId: CardId): number {
   for (let seed = 0; seed < 100000; seed++) {
@@ -323,9 +323,13 @@ describe('localization and sound', () => {
       disconnect: vi.fn(),
     });
     const resume = vi.fn(async () => {});
+    let audioState: AudioContextState = 'running';
     vi.stubGlobal(
       'AudioContext',
       class {
+        get state() {
+          return audioState;
+        }
         currentTime = 0;
         destination = {};
         resume = resume;
@@ -358,5 +362,28 @@ describe('localization and sound', () => {
     expect(usePreferences.getState().soundEnabled).toBe(false);
     expect(usePreferences.getState().soundError).toBe('soundFailed');
     expect(usePreferences.getState().soundErrorDetail).toBe('Audio blocked');
+
+    await toggleSound();
+    audioState = 'suspended';
+    resume.mockImplementation(async () => {
+      audioState = 'running';
+    });
+    const resumeCalls = resume.mock.calls.length;
+    const recovery = resumeSound();
+    playEventSound({ type: 'DICE_ROLLED', playerId: 'red', value: 3 });
+    await recovery;
+    expect(resume).toHaveBeenCalledTimes(resumeCalls + 1);
+    expect(createOscillator).toHaveBeenCalledTimes(10);
+    expect(usePreferences.getState().soundEnabled).toBe(true);
+
+    audioState = 'suspended';
+    resume.mockImplementation(async () => {});
+    await resumeSound();
+    expect(usePreferences.getState().soundEnabled).toBe(false);
+    expect(usePreferences.getState().soundErrorDetail).toBe(
+      'Audio playback could not be resumed.',
+    );
+    playEventSound({ type: 'DICE_ROLLED', playerId: 'red', value: 3 });
+    expect(createOscillator).toHaveBeenCalledTimes(10);
   });
 });

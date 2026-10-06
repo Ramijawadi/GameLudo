@@ -2,6 +2,31 @@ import type { GameEvent } from '@ludo/engine';
 import { usePreferences } from './i18n';
 
 let context: AudioContext | null = null;
+let pendingResume: Promise<void> | null = null;
+
+function resumeAudio(audio: AudioContext): Promise<void> {
+  if (!pendingResume) {
+    pendingResume = audio
+      .resume()
+      .then(() => {
+        if (audio.state !== 'running')
+          throw new Error('Audio playback could not be resumed.');
+      })
+      .finally(() => {
+        pendingResume = null;
+      });
+  }
+  return pendingResume;
+}
+
+export async function resumeSound(): Promise<void> {
+  if (!usePreferences.getState().soundEnabled || !context) return;
+  try {
+    if (context.state !== 'running') await resumeAudio(context);
+  } catch (error) {
+    reportSoundError(error);
+  }
+}
 
 function reportSoundError(error: unknown): void {
   usePreferences.setState({
@@ -25,8 +50,8 @@ export async function toggleSound(): Promise<void> {
     return;
   }
   try {
-    context ??= new AudioContext();
-    await context.resume();
+    if (!context || context.state === 'closed') context = new AudioContext();
+    await resumeAudio(context);
     usePreferences.setState({
       soundEnabled: true,
       soundError: null,
@@ -99,6 +124,14 @@ function playEngineRev(audio: AudioContext): void {
 export function playEventSound(event: GameEvent): void {
   if (!usePreferences.getState().soundEnabled || !context) return;
   const audio = context;
+  if (audio.state !== 'running') {
+    void resumeAudio(audio)
+      .then(() => {
+        if (usePreferences.getState().soundEnabled) playEventSound(event);
+      })
+      .catch(reportSoundError);
+    return;
+  }
   if (event.type === 'DICE_ROLLED') {
     try {
       playEngineRev(audio);

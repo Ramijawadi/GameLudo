@@ -19,15 +19,17 @@ export function SetupPage() {
   return (
     <main className="setup-page">
       <Preferences />
-      <div className="logo-mark" aria-hidden="true">
-        <i className="red" />
-        <i className="green" />
-        <i className="blue" />
-        <i className="yellow" />
+      <div className="setup-brand">
+        <div className="logo-mark" aria-hidden="true">
+          <i className="red" />
+          <i className="green" />
+          <i className="blue" />
+          <i className="yellow" />
+        </div>
+        <p className="eyebrow">{t('eyebrow')}</p>
+        <h1>Ludo</h1>
+        <p className="intro">{t('intro')}</p>
       </div>
-      <p className="eyebrow">{t('eyebrow')}</p>
-      <h1>Ludo</h1>
-      <p className="intro">{t('intro')}</p>
       <section className="setup-card" aria-labelledby="setup-title">
         <h2 id="setup-title">{t('local')}</h2>
         <p>{t('noAccounts')}</p>

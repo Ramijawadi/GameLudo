@@ -42,13 +42,17 @@ to choose on a small screen. Pass the phone when the turn changes.
   Web Audio). Each roll plays a synthesized "vroom vroom" car-engine rev while
   the die tumbles. Movement, capture, cards and victory use quiet tones, without
   external assets. Audio failures are visibly reported.
+  Tapping either roll control also resumes audio after browser suspension
+  (for example, after switching apps on a phone).
 - The die is a 3D CSS cube on a felt tray. It hops and spins during the roll,
   lands on the rolled face, flashes gold on a six and shows a 🔥 streak badge.
-- The game screen fills exactly one phone viewport (`100dvh`), with no page
+- Setup and the game screen fit one viewport (`100dvh`), with no page
   scrolling. The board is sized from the space left over by the header, turn
   banner, roll button, player chips, pawn picker and reactions. Corner dice
   occupy reserved space above and below the board without covering pawns. Its symbols
-  scale with container units. Reduced motion skips the roll animation.
+  scale with container units. Landscape screens place the board beside the
+  controls instead of stacking everything vertically. Reduced motion skips
+  the roll animation.
 - Numbered selection circles are 40–46px, with explicit selected and
   playable states and per-player colors.
 

@@ -1,5 +1,6 @@
 import { useGameStore } from '../store';
 import { useTranslation } from '../i18n';
+import { resumeSound } from '../sounds';
 import type { PlayerColor } from '@ludo/engine';
 import { useRef, type MouseEvent, type PointerEvent } from 'react';
 
@@ -28,6 +29,7 @@ function useRollControls(playerId?: PlayerColor) {
     !card &&
     (!playerId || current === playerId);
   const handleRoll = () => {
+    void resumeSound();
     roll();
   };
   const handlePointerDown = (event: PointerEvent<HTMLButtonElement>) => {
